@@ -1,0 +1,18 @@
+
+# generate the box and atom positions using a diamond lattice
+variable a equal 3.615
+
+boundary        p p p
+units           metal
+lattice         fcc $a
+
+region          box block 0 10 0 10 0 10
+create_box      1 box
+create_atoms    1 box
+
+#mass 1 1.0
+
+pair_style      eam/alloy
+pair_coeff * * Cu.lammps.eam Cu
+
+include ../in.affine_modulus

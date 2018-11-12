@@ -1,0 +1,77 @@
+#!/usr/bin/env python 
+# -*- coding: utf-8 -*-
+"""A simple python template.
+
+"""
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+
+# Python template written by Bin Xu (xubinrun@gmail.com)
+# Licensed under GPL License
+
+# sys library is often used
+
+import argparse
+#import os
+#import re
+from scipy import stats
+import numpy as np
+import sys
+import time
+#import pandas as pd
+#import matplotlib.pyplot as plt
+#import doctest
+#It's a good habit to write testing code.
+
+
+# main process
+
+
+def main():
+    # Time start
+    start_ticks = time.time()
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(description=__doc__,
+            epilog= """This is some addition description.
+                    """,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-nt","--notime", help="Don't dispaly time usage.", action="store_true", default=False)
+    parser.add_argument("-k","--key", help="Define the key column.", type=int, default=(1,2), metavar='col_num', nargs=2)
+    parser.add_argument("-xr","--xrange", help="Define the xrange of data.", type=float, default=(-np.inf,np.inf),
+            metavar='xrange', nargs=2)
+    parser.add_argument("infile", help="Define the input file.", type=argparse.FileType('r'), default=sys.stdin, nargs='?')
+    #parser.add_argument("-o","--outfile", help="Define the output file.", type=argparse.FileType('w'), default=sys.stdout)
+    args = parser.parse_args()
+
+    # Your main process
+    input = args.infile.readlines()
+    keys = args.key
+    x = []
+    xcolumn = keys[0]-1
+    y = []
+    ycolumn = keys[1]-1
+    xl = args.xrange[0]
+    xh = args.xrange[1]
+    for line in input:
+        tmp = line.split()
+        if tmp[0][0] == '#':
+            continue
+        tmpx = np.double(tmp[xcolumn])
+        tmpy = np.double(tmp[ycolumn])
+        if tmpx >= xl and tmpx <= xh:
+            x.append(np.double(tmp[xcolumn]))
+            y.append(np.double(tmp[ycolumn]))
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+    print("y =",slope,"* x +",intercept)
+    print("Correlation coefficient:", r_value)
+    print("Stderr:", std_err)
+    
+    # Time end
+    end_tickes = time.time()
+    # Output time usage
+    if not args.notime:
+        print("Time usage: %f s" % (end_tickes-start_ticks))
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
