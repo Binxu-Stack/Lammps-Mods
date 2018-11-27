@@ -1,0 +1,40 @@
+# variables to build initial simulation box
+# info from website http://www.periodictable.com/Elements/040/data.html
+variable liquid_density         equal 5.8  # g/cm^3
+variable natom                  equal 10000
+variable mole                   equal 6.02214076e23
+variable atomic_wight           equal 91.224 # Zr
+variable atomic_volume          equal 1e-6/(${liquid_density}/${atomic_wight}*${mole})*1e30
+variable box_volume             equal ${natom}*${atomic_volume}
+variable box_length             equal ${box_volume}^(1./3.)
+variable seed                   equal 12345
+variable fraction_Zr            equal 0.5 # Zr fraction
+variable fraction_Cu            equal 0.4 # Cu fraction
+variable fraction_Al            equal 0.1 # Al fraction
+variable nZr                    equal ${natom}*${fraction_Zr}
+variable nCu                    equal ${natom}*${fraction_Cu}
+variable nAl                    equal ${natom}*${fraction_Al}
+variable ntypes                 equal 3
+print "Box_length: ${box_length}"
+# boundary and units
+
+boundary         p p p
+units            metal
+dimension        3
+atom_style       atomic
+
+
+# create simulation box and atoms
+region       box block 0 ${box_length} 0 ${box_length} 0 ${box_length} units box
+create_box   ${ntypes} box
+create_atoms 1 random ${nZr} ${seed} NULL
+variable seed equal ${seed}*2
+create_atoms 2 random ${nCu} ${seed} NULL
+variable seed equal ${seed}*2
+create_atoms 3 random ${nAl} ${seed} NULL
+
+pair_style lj/cut 2.5
+pair_coeff * * 1 1
+mass * 1
+
+write_data data.pos

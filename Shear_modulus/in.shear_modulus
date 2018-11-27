@@ -1,0 +1,31 @@
+# LAMMPS mods to calculate AQS modulus in xy direction
+# Author: Bin Xu (xubinrun@gmail.com)
+
+# control variables
+variable max_strain 	equal 0.01
+variable strain_step 	equal 1e-5
+variable dxy 		equal v_strain_step*ly
+variable loop_num 	equal v_max_strain/v_strain_step
+
+# watch variables
+#variable bar2GPa      	equal 1e-5  	# assuming units metal
+variable stress  	equal -pxy      #*${bar2GPa}
+variable strain  	equal  xy/ly
+variable pea 		equal pe/atoms
+
+# main loop
+run 0 
+write_dump all atom init.lammpstrj
+
+change_box all triclinic
+variable loop_index loop ${loop_num}
+
+label AFFINE_LOOP
+change_box all xy delta ${dxy} remap units box
+thermo_style custom step pe pxx pyy pzz pxy pxz pyz v_strain v_stress v_pea
+minimize 0 1e-5 2000 2000
+print  "! ${loop_index} ${strain} ${stress} ${pea}"
+next loop_index
+jump SELF AFFINE_LOOP
+
+write_dump all atom final.lammpstrj

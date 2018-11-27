@@ -1,0 +1,28 @@
+# boundary and units
+boundary         p p p
+units            metal
+dimension        3
+atom_style       atomic
+
+
+read_data data.pos
+
+pair_style  eam/alloy
+pair_coeff  * * ZrCuAl.lammps.eam Zr Cu Al
+
+# ========== Define Interatomic Potential =============================
+# Some suggestions: you may put the potential file in the environmental
+# variable localtion $LAMMPS_POTENTIALS (set it in ~/.bashrc)
+#----------------------------------------------------------------------
+# =====================================================================
+
+# ========== Define the pairwise neighbor list methods ================
+# In most situations, the style bin is the fastest methods. All of styles
+# should give the same answers. "nsq" style may be faster for unsolvated small 
+# molecules in a non-periodic box. "multi" style is useful for system
+# with a wide range of cutoff distance.
+# ---------------------------------------------------------------------
+neighbor 2.0 bin
+neigh_modify delay 0 every 4 check yes
+
+include ./in.cooling

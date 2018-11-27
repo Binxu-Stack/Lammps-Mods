@@ -1,0 +1,56 @@
+# Quench system with a defined cooling rate. Write restart at different temperature.
+variable coolrate equal 1e12
+variable temp0 equal 2500               # Equilibrium temperature
+variable temp_final  equal 100          # Final temperatue50e
+
+# ensamble
+variable tstep equal "2e-3"
+variable Pdamp equal "v_tstep * 1000"  # suggusted value for Nose-Hoover thermostate
+variable Tdamp equal "v_tstep * 100"   # suggusted value for Nose-Hoover thermostate
+variable pressure equal 0
+variable coolsteps equal "(v_temp0 - v_temp1) / v_coolrate / v_tstep / 1e-12"
+
+reset_timestep   0
+timestep         ${tstep}
+
+#                     1   2       3     4      5   6   7   8   9   10 11  12  13
+thermo_style custom step temp enthalpy etotal vol  pe pxx pyy pzz pxy pyz pxz lx
+thermo 500
+
+# construct reasonable initial configuration
+minimize 1e-6 1e-8 1000 1000
+
+# relaxation for 1000 ps = 1 ns
+fix NPT all npt temp ${temp0} ${temp0} ${Tdamp} iso ${pressure} ${pressure} ${Pdamp} mtk no
+run 500000
+
+write_dump all atom 2500.lammpstrj
+write_restart after_relaxation.restart
+
+variable temp1 equal 1500
+fix NPT all npt temp ${temp0} ${temp1} ${Tdamp} iso ${pressure} ${pressure} ${Pdamp}
+run ${coolsteps}
+write_restart T_${temp1}.restart
+
+# from 1500 K to final temperature, Delta T = 100 K
+variable temp0 equal 1500
+variable temp1 equal 1400
+
+variable numloop equal (v_temp0-v_temp_final)/100
+variable n loop ${numloop}
+label coolingloop1
+#neigh_modify every 2
+#fix NVE all nve/limit 0.1
+#fix NVE all nve
+#fix LANGEVIN all langevin ${temp0} ${temp1} ${Tdamp} ${seed} 
+#fix PRESS all press/berendsen iso ${pressure} ${pressure} ${Pdamp}
+fix NPT all npt temp ${temp0} ${temp1} ${Tdamp} iso ${pressure} ${pressure} ${Pdamp}
+run ${coolsteps}
+write_restart T_${temp1}.restart
+variable tmp equal "v_temp0 - 100"
+variable temp0 equal ${tmp}
+variable tmp equal "v_temp0 - 100"
+variable temp1 equal ${tmp}
+next n
+jump SELF coolingloop1
+
