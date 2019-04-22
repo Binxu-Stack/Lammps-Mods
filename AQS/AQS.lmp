@@ -28,6 +28,9 @@ minimize ${energy_tolerance} ${force_tolerance} ${max_iter} ${maxeval}
 
 print "! 0 ${strain} ${stress} ${ave_pe}"  # print initial thermo
 
+shell mkdir DUMP
+shell cd DUMP
+
 label shearloop
 change_box all xy delta ${dxy} remap units box
 
@@ -49,6 +52,6 @@ jump SELF shearloop
 
 write_restart final.restart
 
+shell cd ..
 shell grep "^!" log.lammps > strain_stress_energy.dat
-label END
 
